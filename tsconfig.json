@@ -1,0 +1,8 @@
+{
+  "extends": "@del-wang/config/typescript-vite",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": { "@/*": ["./src/*"] }
+  },
+  "include": ["src"]
+}
