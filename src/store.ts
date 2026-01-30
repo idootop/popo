@@ -1,44 +1,88 @@
 import { toast } from 'sonner';
-import { createStore } from 'zenbox';
+import { createStore, useStore } from 'zenbox';
 
 import { COS } from './cos';
+import { type FileType, getFileSize, getFileType } from './file';
 
 interface COSFile {
   Key: string;
   LastModified: string;
   Size: number;
+  type: FileType;
+  size: string;
   isImage: boolean;
   isText: boolean;
+  isMsg: boolean;
+  url?: string;
+  content?: string;
 }
 
-type ViewMode = 'chat' | 'grid';
+type TabPage = 'chat' | 'files';
+type ViewMode = 'list' | 'grid';
 
 const store = createStore({
-  files: [],
-  viewMode: 'chat',
+  files: [] as COSFile[],
+  mainTab: 'chat' as TabPage,
+  viewMode: 'grid' as ViewMode,
+  sortConfig: { key: 'LastModified', order: 'desc' },
+  selectedKey: null,
+  previewFile: null,
   isLoading: false,
-  editingFile: null,
 
   setViewMode: (viewMode: ViewMode) => store.setState({ viewMode }),
   toast: (msg: string) => toast(msg),
-  setEditingFile: (editingFile: COSFile) => store.setState({ editingFile }),
+  setMainTab: (tab) => store.setState({ mainTab: tab }),
+  setPreviewFile: (file) => store.setState({ previewFile: file }),
+  setSortConfig: (config) => {
+    store.setState((state) => {
+      state.sortConfig =
+        typeof config === 'function' ? config(state.sortConfig) : config;
+    });
+  },
 
   refreshFiles: async () => {
     store.setState({ isLoading: true });
     try {
       const rawFiles = await COS.instance.getFiles();
-      const processed = rawFiles
-        .map((f) => ({
-          ...f,
-          isImage: /\.(jpg|jpeg|png|gif|webp)$/i.test(f.Key),
-          isText: /\.(txt|md|js|json|css|html|msg_.*\.txt)$/i.test(f.Key),
-        }))
-        .sort(
-          (a, b) =>
-            new Date(b.LastModified).getTime() -
-            new Date(a.LastModified).getTime(),
-        );
-      store.setState({ files: processed, isLoading: false });
+      const processed = await Promise.all(
+        rawFiles.map(async (f) => {
+          const type = getFileType(f.Key);
+          const isImage = type === 'image';
+          const isText = type === 'text' || f.Key.startsWith('msg_');
+          let url: string | undefined;
+          let content: string | undefined;
+
+          if (type === 'image' || type === 'audio' || type === 'video') {
+            url = await COS.instance.getSignedUrl(f.Key);
+          }
+
+          if (isText && f.Key.startsWith('msg_')) {
+            try {
+              content = await COS.instance.getObjectContent(f.Key);
+            } catch (e) {
+              console.error(`Failed to fetch content for ${f.Key}`, e);
+            }
+          }
+
+          return {
+            ...f,
+            type,
+            size: getFileSize(f.Size),
+            isImage,
+            isText,
+            url,
+            content,
+            isMsg: f.Key.startsWith('msg_'),
+          };
+        }),
+      );
+
+      const sorted = processed.sort(
+        (a, b) =>
+          new Date(b.LastModified).getTime() -
+          new Date(a.LastModified).getTime(),
+      );
+      store.setState({ files: sorted, isLoading: false });
     } catch (e) {
       console.error(e);
       store.setState({ isLoading: false });
@@ -85,27 +129,6 @@ const store = createStore({
     }
   },
 
-  previewFile: async (file: COSFile) => {
-    if (file.isImage) {
-      const url = await COS.instance.getSignedUrl(file.Key);
-      store.setState({
-        editingFile: { key: file.Key, content: url, type: 'image' },
-      });
-    } else if (file.isText) {
-      try {
-        const content = await COS.instance.getObjectContent(file.Key);
-        store.setState({
-          editingFile: { key: file.Key, content: content, type: 'text' },
-        });
-      } catch (e) {
-        console.error(e);
-        store.value.toast('读取失败');
-      }
-    } else {
-      store.value.download(file.Key);
-    }
-  },
-
   copyLink: async (key: string) => {
     const url = await COS.instance.getSignedUrl(key);
     const el = document.createElement('textarea');
@@ -127,17 +150,19 @@ const store = createStore({
     link.click();
   },
 
-  saveEdit: async (key: string, content: string) => {
-    try {
-      await COS.instance.uploadFile(key, content);
-      store.setState({ editingFile: null });
-      store.value.toast('修改已保存 ✨');
-      store.value.refreshFiles();
-    } catch (e) {
-      console.error(e);
-      store.value.toast('保存失败');
-    }
-  },
+  // saveEdit: async (key: string, content: string) => {
+  //   try {
+  //     await COS.instance.uploadFile(key, content);
+  //     store.setState({ editingFile: null });
+  //     store.value.toast('修改已保存 ✨');
+  //     store.value.refreshFiles();
+  //   } catch (e) {
+  //     console.error(e);
+  //     store.value.toast('保存失败');
+  //   }
+  // },
 });
 
 export const FileStore = store;
+
+export const useFileStore = () => useStore(FileStore);
