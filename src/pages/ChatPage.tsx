@@ -1,10 +1,9 @@
 import { Download, Plus, Send } from 'lucide-react';
-import { useMemo, useState } from 'react';
-import { toast } from 'sonner';
+import { type ClipboardEventHandler, useMemo, useState } from 'react';
 
 import { FileIcon } from '@/components/FileIcon';
-import { ChatActionMenu, kFileActions } from '@/components/FileMenu';
-import { useFileStore } from '@/store';
+import { ChatActionMenu, handleFileAction } from '@/components/FileMenu';
+import { FileStore, useFileStore } from '@/store';
 
 export function ChatPage() {
   const { files, setPreviewFile } = useFileStore();
@@ -19,14 +18,13 @@ export function ChatPage() {
     });
   }, [files]);
 
-  const onPaste = (e) => {
+  const onPaste: ClipboardEventHandler = (e) => {
     const items = e.clipboardData.items;
-    for (let i = 0; i < items.length; i++) {
-      if (items[i].kind === 'file') {
-        const file = items[i].getAsFile();
-        toast.info(`捕捉到粘贴文件: ${file.name}`);
-      }
-    }
+    const files = Array.from(items)
+      .filter((e) => e.kind === 'file')
+      .map((e) => e.getAsFile());
+    if (files.length) e.stopPropagation();
+    FileStore.value.upload(files);
   };
 
   return (
@@ -68,7 +66,7 @@ export function ChatPage() {
                     </div>
                   ) : file.isMsg ? (
                     <p className="whitespace-pre-wrap text-sm md:text-[15px]">
-                      {file.content}
+                      {file.text}
                     </p>
                   ) : (
                     <div className="flex min-w-[180px] items-center gap-3 px-2 py-1">
@@ -83,7 +81,7 @@ export function ChatPage() {
                       </div>
                       <button
                         className="p-2 text-slate-300 hover:text-amber-500"
-                        onClick={() => kFileActions('download', file)}
+                        onClick={() => handleFileAction('download', file)}
                       >
                         <Download size={16} />
                       </button>

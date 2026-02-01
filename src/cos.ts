@@ -37,55 +37,6 @@ export class COS {
     });
   }
 
-  async getFiles() {
-    return new Promise<any[]>((resolve, reject) => {
-      this.client.getBucket(
-        {
-          Bucket: this.bucket,
-          Region: this.region,
-          Prefix: '',
-        },
-        (err, data) => {
-          if (err) reject(err);
-          else resolve(data.Contents || []);
-        },
-      );
-    });
-  }
-
-  async uploadFile(key: string, body: File | string) {
-    return new Promise((resolve, reject) => {
-      this.client.putObject(
-        {
-          Bucket: this.bucket,
-          Region: this.region,
-          Key: key,
-          Body: body,
-        },
-        (err, data) => {
-          if (err) reject(err);
-          else resolve(data);
-        },
-      );
-    });
-  }
-
-  async deleteFile(key: string) {
-    return new Promise((resolve, reject) => {
-      this.client.deleteObject(
-        {
-          Bucket: this.bucket,
-          Region: this.region,
-          Key: key,
-        },
-        (err) => {
-          if (err) reject(err);
-          else resolve(true);
-        },
-      );
-    });
-  }
-
   async getSignedUrl(key: string): Promise<string> {
     return new Promise((resolve, reject) => {
       this.client.getObjectUrl(
@@ -104,7 +55,76 @@ export class COS {
     });
   }
 
-  async getObjectContent(key: string): Promise<string> {
+  getUrl(
+    key: string,
+    { download = false }: { download?: boolean } = {},
+  ): string {
+    return this.client.getObjectUrl(
+      {
+        Bucket: this.bucket,
+        Region: this.region,
+        Key: key,
+        Sign: download,
+        Query: download
+          ? {
+              'response-content-disposition': `attachment; filename="${encodeURIComponent(key)}"`,
+            }
+          : undefined,
+      },
+      () => {},
+    );
+  }
+
+  async list() {
+    return new Promise<any[]>((resolve, reject) => {
+      this.client.getBucket(
+        {
+          Bucket: this.bucket,
+          Region: this.region,
+          Prefix: '',
+        },
+        (err, data) => {
+          if (err) reject(err);
+          else resolve(data.Contents || []);
+        },
+      );
+    });
+  }
+
+  async upload(key: string, body: File | string) {
+    return new Promise((resolve, reject) => {
+      this.client.putObject(
+        {
+          Bucket: this.bucket,
+          Region: this.region,
+          Key: key,
+          Body: body,
+        },
+        (err, data) => {
+          if (err) reject(err);
+          else resolve(data);
+        },
+      );
+    });
+  }
+
+  async delete(key: string) {
+    return new Promise((resolve, reject) => {
+      this.client.deleteObject(
+        {
+          Bucket: this.bucket,
+          Region: this.region,
+          Key: key,
+        },
+        (err) => {
+          if (err) reject(err);
+          else resolve(true);
+        },
+      );
+    });
+  }
+
+  async readString(key: string): Promise<string> {
     return new Promise((resolve, reject) => {
       this.client.getObject(
         {

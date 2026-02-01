@@ -24,7 +24,6 @@ const FilePreviewModal = ({ file, onClose }) => {
     ),
     video: (
       <video
-        autoPlay
         className="max-h-[80vh] w-full"
         controls
         playsInline
@@ -70,7 +69,7 @@ const FilePreviewModal = ({ file, onClose }) => {
                   {file.Key}
                 </h3>
                 <pre className="mt-4 max-h-40 overflow-auto whitespace-pre-wrap rounded-lg bg-slate-50 p-4 text-left text-gray-500 text-xs">
-                  {file.content || '暂无详细文本内容'}
+                  {file.text || '暂无详细文本内容'}
                 </pre>
               </div>
             </div>
