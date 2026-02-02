@@ -1,9 +1,10 @@
-import { Check, Download, Edit3, ExternalLink, X } from 'lucide-react';
+import { Check, Download, Edit3, MoreHorizontal, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 import { useFileStore } from '@/store';
 
 import { FileIcon } from './FileIcon';
+import { useFileActionPopover } from './FileMenu';
 
 export function FilePreview() {
   const { previewFile, setPreviewFile } = useFileStore();
@@ -22,9 +23,6 @@ export function FilePreview() {
     // 2. 处理 Esc 按键
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        // 如果是 Esc，我们直接调用 onClose 逻辑
-        // 注意：这里不需要手动调 setPreviewFile，
-        // 而是通过 history.back() 触发上面的 handlePopState，保持逻辑统一
         window.history.back();
       }
     };
@@ -45,7 +43,7 @@ export function FilePreview() {
         window.history.back();
       }
     };
-  }, [previewFile, setPreviewFile]);
+  }, [previewFile]);
 
   if (!previewFile) return null;
 
@@ -88,10 +86,21 @@ const PreviewBody = ({ file }) => {
 const PreviewHeader = ({ file, onClose }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [newName, setNewName] = useState(file.Key);
+  const { FileMenuPopover, openFilePopover } = useFileActionPopover({
+    excludes: ['preview', 'edit', 'rename'],
+    options: {
+      close: {
+        icon: X,
+        label: '关闭',
+        action: () => onClose(),
+      },
+    },
+  });
 
   const handleRename = () => {
     if (newName !== file.Key && newName.trim()) {
       // todo 假设 Store 有 rename 方法
+      setNewName(file.Key);
       // FileStore.value.rename(file.Key, newName);
     }
     setIsEditing(false);
@@ -133,31 +142,18 @@ const PreviewHeader = ({ file, onClose }) => {
 
       <div className="flex items-center gap-2">
         <button
-          className="rounded-full p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-white/5"
-          onClick={() => window.open(file.url)}
+          className="ml-2 flex h-9 w-9 cursor-pointer items-center justify-center rounded-full text-slate-600 transition-colors hover:bg-slate-100 dark:bg-white/10 dark:text-slate-300"
+          onClick={(e) => {
+            e.stopPropagation();
+            openFilePopover(e, file);
+          }}
         >
-          <ExternalLink size={20} />
-        </button>
-        <button
-          className="ml-2 flex h-9 w-9 items-center justify-center rounded-full bg-slate-200 text-slate-600 transition-colors hover:bg-slate-300 dark:bg-white/10 dark:text-slate-300"
-          onClick={onClose}
-        >
-          <X size={20} />
+          <MoreHorizontal size={20} />
         </button>
       </div>
-    </header>
-  );
-};
 
-// --- 文本与代码预览 (Monaco) ---
-export const CodePreview = ({ file }) => {
-  return (
-    <div className="h-full w-full bg-white p-6 dark:bg-[#1e1e1e]">
-      <textarea
-        className="h-full w-full resize-none border-none bg-transparent font-mono text-[14px] text-slate-800 leading-relaxed outline-none dark:text-slate-300"
-        spellCheck={false}
-      />
-    </div>
+      <FileMenuPopover />
+    </header>
   );
 };
 
@@ -219,3 +215,15 @@ export const FallbackPreview = ({ file }) => (
     </button>
   </div>
 );
+
+// --- 文本与代码预览 (Monaco) ---
+export const CodePreview = ({ file }) => {
+  return (
+    <div className="h-full w-full bg-white p-6 dark:bg-[#1e1e1e]">
+      <textarea
+        className="h-full w-full resize-none border-none bg-transparent font-mono text-[14px] text-slate-800 leading-relaxed outline-none dark:text-slate-300"
+        spellCheck={false}
+      />
+    </div>
+  );
+};
