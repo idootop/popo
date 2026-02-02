@@ -1,7 +1,15 @@
-import { Check, Download, Edit3, MoreHorizontal, X } from 'lucide-react';
+import {
+  Check,
+  Download,
+  Edit3,
+  Loader2,
+  MoreHorizontal,
+  X,
+} from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 
-import { useFileStore } from '@/store';
+import { FileStore, useFileStore } from '@/store';
 
 import { FileIcon } from './FileIcon';
 import { useFileActionPopover } from './FileMenu';
@@ -85,6 +93,7 @@ const PreviewBody = ({ file }) => {
 // --- 顶部操作栏 ---
 const PreviewHeader = ({ file, onClose }) => {
   const [isEditing, setIsEditing] = useState(false);
+  const [isRenaming, setIsRenaming] = useState(false);
   const [newName, setNewName] = useState(file.Key);
   const { FileMenuPopover, openFilePopover } = useFileActionPopover({
     excludes: ['preview', 'edit', 'rename'],
@@ -97,13 +106,22 @@ const PreviewHeader = ({ file, onClose }) => {
     },
   });
 
-  const handleRename = () => {
-    if (newName !== file.Key && newName.trim()) {
-      // todo 假设 Store 有 rename 方法
-      setNewName(file.Key);
-      // FileStore.value.rename(file.Key, newName);
-    }
+  const handleRename = async () => {
     setIsEditing(false);
+    if (isRenaming) return;
+    setIsRenaming(true);
+    if (newName.trim() !== file.Key && newName.trim()) {
+      try {
+        await FileStore.value.rename(file.Key, newName.trim());
+        FileStore.value.setPreviewFile(
+          FileStore.value.files.find((e) => e.Key === newName.trim()),
+        );
+      } catch (err) {
+        toast.error(`重命名失败: ${err.message || '未知错误'}`);
+        setNewName(file.Key);
+      }
+    }
+    setIsRenaming(false);
   };
 
   return (
@@ -127,15 +145,21 @@ const PreviewHeader = ({ file, onClose }) => {
         ) : (
           <div
             className="group flex cursor-pointer items-center gap-2 overflow-hidden"
-            onClick={() => setIsEditing(true)}
+            onClick={() => {
+              if (!isRenaming) setIsEditing(true);
+            }}
           >
             <h2 className="truncate font-semibold text-slate-700 text-sm dark:text-slate-200">
               {file.Key}
             </h2>
-            <Edit3
-              className="text-slate-400 opacity-0 group-hover:opacity-100"
-              size={14}
-            />
+            {isRenaming ? (
+              <Loader2 className="animate-spin text-blue-500" size={16} />
+            ) : (
+              <Edit3
+                className="text-slate-400 opacity-0 group-hover:opacity-100"
+                size={14}
+              />
+            )}
           </div>
         )}
       </div>

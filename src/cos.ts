@@ -139,4 +139,36 @@ export class COS {
     await this.upload(key, text);
     this.cache.set(key, text);
   }
+
+  async rename(oldKey: string, newKey: string) {
+    if (oldKey === newKey) return true;
+
+    // 1. 复制文件到新路径
+    await new Promise((resolve, reject) => {
+      this.client.putObjectCopy(
+        {
+          Bucket: this.bucket,
+          Region: this.region,
+          Key: newKey,
+          CopySource: `${this.bucket}.cos.${this.region}.myqcloud.com/${encodeURIComponent(oldKey)}`,
+        },
+        (err, data) => {
+          if (err) reject(err);
+          else resolve(data);
+        },
+      );
+    });
+
+    // 2. 删除原文件
+    const content = this.cache.get(oldKey);
+
+    await this.delete(oldKey);
+
+    // 3. 同步更新缓存
+    if (content) {
+      this.cache.set(newKey, content);
+    }
+
+    return true;
+  }
 }

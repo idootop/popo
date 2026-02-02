@@ -85,6 +85,15 @@ const store = createStore({
       error: (err) => `发送失败: ${err.message || '未知错误'}`,
     });
   },
+
+  async rename(oldKey: string, newKey: string) {
+    if (oldKey === newKey) return true;
+    await COS.instance.rename(oldKey, newKey);
+    store.setState((s) => {
+      const f = s.files.find((e) => e.Key === oldKey);
+      f.Key = newKey;
+    });
+  },
 });
 
 export const FileStore = store;
