@@ -1,4 +1,4 @@
-import { Plus, Send } from 'lucide-react';
+import { Plus, RefreshCw, Send } from 'lucide-react';
 import { type ClipboardEventHandler, useMemo, useRef, useState } from 'react';
 
 import { ChatActionMenu } from '@/components/FileMenu';
@@ -65,8 +65,9 @@ export function ChatPage() {
     <div className="relative flex w-full flex-1 flex-col-reverse overflow-y-auto p-4 pb-24 md:p-6 md:pb-32">
       <div className="mx-auto w-full max-w-3xl space-y-6 py-4 md:space-y-8 md:px-4">
         {isLoading && !sortedFiles.length ? (
-          <div className="flex h-[80vh] items-center justify-center">
-            <p className="text-gray-400 text-sm">加载中...</p>
+          <div className="flex h-[80vh] flex-col items-center justify-center gap-4">
+            <RefreshCw className="animate-spin text-slate-400" size={24} />
+            <p className="text-slate-500 text-sm">加载中...</p>
           </div>
         ) : (
           sortedFiles.map((file) => (

@@ -82,7 +82,7 @@ const AudioContent: React.FC<{ file: any }> = ({ file }) => (
 // 通用文件组件
 const DefaultFileContent: React.FC<FileProps> = ({ file }) => (
   <div className="flex min-w-[220px] items-center gap-3 px-1 py-1">
-    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50 text-blue-500 dark:bg-blue-500/10">
+    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-slate-100 text-blue-500 dark:bg-blue-500/10">
       <FileIcon fileName={file.Key} size={28} />
     </div>
     <div className="min-w-0 flex-1">

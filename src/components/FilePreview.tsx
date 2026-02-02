@@ -11,6 +11,7 @@ import { toast } from 'sonner';
 
 import { FileStore, useFileStore } from '@/store';
 
+import { CodeEditor } from './CodeEditor';
 import { FileIcon } from './FileIcon';
 import { useFileActionPopover } from './FileMenu';
 
@@ -193,7 +194,7 @@ export const ImagePreview = ({ url }) => (
 );
 
 export const VideoPreview = ({ url }) => (
-  <div className="flex h-full w-full items-center justify-center bg-black">
+  <div className="flex h-full w-full items-center justify-center">
     <video autoPlay className="max-h-full max-w-full" controls src={url} />
   </div>
 );
@@ -232,7 +233,7 @@ export const FallbackPreview = ({ file }) => (
       <p className="text-slate-500 uppercase">{file.size} · 不支持预览</p>
     </div>
     <button
-      className="flex items-center gap-2 rounded-full bg-blue-500 px-8 py-3 font-bold text-white shadow-lg transition-transform hover:scale-105 active:scale-95"
+      className="flex cursor-pointer items-center gap-2 rounded-full bg-blue-500 px-8 py-3 font-bold text-white shadow-lg transition-transform hover:scale-105 active:scale-95"
       onClick={() => window.open(file.url)}
     >
       <Download size={20} /> 下载文件
@@ -241,13 +242,4 @@ export const FallbackPreview = ({ file }) => (
 );
 
 // --- 文本与代码预览 (Monaco) ---
-export const CodePreview = ({ file }) => {
-  return (
-    <div className="h-full w-full bg-white p-6 dark:bg-[#1e1e1e]">
-      <textarea
-        className="h-full w-full resize-none border-none bg-transparent font-mono text-[14px] text-slate-800 leading-relaxed outline-none dark:text-slate-300"
-        spellCheck={false}
-      />
-    </div>
-  );
-};
+export const CodePreview = CodeEditor;

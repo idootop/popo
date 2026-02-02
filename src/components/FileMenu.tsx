@@ -80,9 +80,8 @@ const kFileActions = {
     action: async (file) => {
       if (!confirm('确认删除？')) return;
       try {
-        await COS.instance.delete(file.Key);
+        await FileStore.value.delete(file.Key);
         toast.success('已删除');
-        FileStore.value.refreshFiles();
       } catch (e) {
         console.error(e);
         toast.error('删除失败');

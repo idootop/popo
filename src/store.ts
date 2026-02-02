@@ -94,6 +94,21 @@ const store = createStore({
       f.Key = newKey;
     });
   },
+
+  async writeString(key: string, text: string) {
+    await COS.instance.writeString(key, text);
+    store.setState((s) => {
+      const f = s.files.find((e) => e.Key === key);
+      f.text = text;
+    });
+  },
+
+  async delete(key: string) {
+    await COS.instance.delete(key);
+    store.setState((s) => {
+      s.files = s.files.filter((e) => e.Key !== key);
+    });
+  },
 });
 
 export const FileStore = store;
