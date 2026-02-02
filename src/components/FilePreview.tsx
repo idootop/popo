@@ -1,4 +1,5 @@
-import { X } from 'lucide-react';
+import { Check, Download, Edit3, ExternalLink, X } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 import { useFileStore } from '@/store';
 
@@ -6,76 +7,215 @@ import { FileIcon } from './FileIcon';
 
 export function FilePreview() {
   const { previewFile, setPreviewFile } = useFileStore();
+
+  useEffect(() => {
+    if (!previewFile) return;
+
+    // 1. 处理返回键 (History API)
+    const state = { view: 'preview' };
+    window.history.pushState(state, '');
+
+    const handlePopState = () => {
+      setPreviewFile(null);
+    };
+
+    // 2. 处理 Esc 按键
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        // 如果是 Esc，我们直接调用 onClose 逻辑
+        // 注意：这里不需要手动调 setPreviewFile，
+        // 而是通过 history.back() 触发上面的 handlePopState，保持逻辑统一
+        window.history.back();
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    window.addEventListener('keydown', handleKeyDown);
+
+    // 3. 锁定滚动
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+      window.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = '';
+
+      // 清理历史记录
+      if (window.history.state?.view === 'preview') {
+        window.history.back();
+      }
+    };
+  }, [previewFile, setPreviewFile]);
+
   if (!previewFile) return null;
 
   return (
-    <FilePreviewModal file={previewFile} onClose={() => setPreviewFile(null)} />
-  );
-}
-
-const FilePreviewModal = ({ file, onClose }) => {
-  const PREVIEW_MAP = {
-    image: (
-      <img
-        alt="预览"
-        className="max-h-[80vh] w-auto object-contain"
-        src={file.url}
+    <div className="fade-in zoom-in fixed inset-0 z-[200] flex animate-in flex-col bg-white duration-200 dark:bg-[#1C1C1E]">
+      <PreviewHeader
+        file={previewFile}
+        onClose={() => window.history.back()} // 统一通过 history 退出
       />
-    ),
-    video: (
-      <video
-        className="max-h-[80vh] w-full"
-        controls
-        playsInline
-        preload="metadata"
-        src={file.url}
-      />
-    ),
-    audio: (
-      <audio
-        className="w-80 rounded-lg bg-slate-100 p-2"
-        controls
-        playsInline
-        preload="metadata"
-        src={file.url}
-      />
-    ),
-  };
-
-  return (
-    <div
-      className="fixed inset-0 z-[100] flex items-center justify-center p-4 transition-opacity"
-      onClick={onClose}
-    >
-      <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" />
-
-      <div
-        className="relative z-10 flex max-w-4xl flex-col items-center justify-center"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <button
-          className="absolute -top-12 right-0 rounded-full bg-white/10 p-2 text-white/80 transition-all hover:bg-white/20 hover:text-white"
-          onClick={onClose}
-        >
-          <X size={24} />
-        </button>
-
-        <div className="overflow-hidden rounded-xl bg-black/20 shadow-2xl">
-          {PREVIEW_MAP[file.type] || (
-            <div className="flex min-w-[320px] flex-col items-center gap-6 bg-white p-8 text-center md:p-12">
-              <FileIcon fileName={file.Key} size={80} />
-              <div className="max-w-xs">
-                <h3 className="truncate font-bold text-gray-800 text-lg">
-                  {file.Key}
-                </h3>
-                <pre className="mt-4 max-h-40 overflow-auto whitespace-pre-wrap rounded-lg bg-slate-50 p-4 text-left text-gray-500 text-xs">
-                  {file.text || '暂无详细文本内容'}
-                </pre>
-              </div>
-            </div>
-          )}
-        </div>
+      <div className="relative flex-1 overflow-hidden bg-[#F5F5F7] dark:bg-black">
+        <PreviewBody file={previewFile} />
       </div>
     </div>
   );
+}
+
+// --- 内容渲染分发器 ---
+const PreviewBody = ({ file }) => {
+  switch (file.type) {
+    case 'text':
+    case 'code':
+      return <CodePreview file={file} />;
+    case 'image':
+      return <ImagePreview url={file.url} />;
+    case 'audio':
+      return <AudioPreview url={file.url} />;
+    case 'video':
+      return <VideoPreview url={file.url} />;
+    case 'pdf':
+    case 'word':
+    case 'excel':
+    case 'ppt':
+      return <DocPreview type={file.type} url={file.url} />;
+    default:
+      return <FallbackPreview file={file} />;
+  }
 };
+
+// --- 顶部操作栏 ---
+const PreviewHeader = ({ file, onClose }) => {
+  const [isEditing, setIsEditing] = useState(false);
+  const [newName, setNewName] = useState(file.Key);
+
+  const handleRename = () => {
+    if (newName !== file.Key && newName.trim()) {
+      // todo 假设 Store 有 rename 方法
+      // FileStore.value.rename(file.Key, newName);
+    }
+    setIsEditing(false);
+  };
+
+  return (
+    <header className="flex h-14 items-center justify-between border-slate-200 border-b px-4 dark:border-white/10 dark:bg-[#1C1C1E]">
+      <div className="flex min-w-0 flex-1 items-center gap-3">
+        <FileIcon fileName={file.Key} size={24} />
+        {isEditing ? (
+          <div className="flex max-w-md flex-1 items-center gap-2">
+            <input
+              autoFocus
+              className="w-full rounded bg-slate-100 px-2 py-1 text-sm outline-none ring-2 ring-blue-500 dark:bg-white/5"
+              onBlur={handleRename}
+              onChange={(e) => setNewName(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleRename()}
+              value={newName}
+            />
+            <button className="text-blue-500" onClick={handleRename}>
+              <Check size={18} />
+            </button>
+          </div>
+        ) : (
+          <div
+            className="group flex cursor-pointer items-center gap-2 overflow-hidden"
+            onClick={() => setIsEditing(true)}
+          >
+            <h2 className="truncate font-semibold text-slate-700 text-sm dark:text-slate-200">
+              {file.Key}
+            </h2>
+            <Edit3
+              className="text-slate-400 opacity-0 group-hover:opacity-100"
+              size={14}
+            />
+          </div>
+        )}
+      </div>
+
+      <div className="flex items-center gap-2">
+        <button
+          className="rounded-full p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-white/5"
+          onClick={() => window.open(file.url)}
+        >
+          <ExternalLink size={20} />
+        </button>
+        <button
+          className="ml-2 flex h-9 w-9 items-center justify-center rounded-full bg-slate-200 text-slate-600 transition-colors hover:bg-slate-300 dark:bg-white/10 dark:text-slate-300"
+          onClick={onClose}
+        >
+          <X size={20} />
+        </button>
+      </div>
+    </header>
+  );
+};
+
+// --- 文本与代码预览 (Monaco) ---
+export const CodePreview = ({ file }) => {
+  return (
+    <div className="h-full w-full bg-white p-6 dark:bg-[#1e1e1e]">
+      <textarea
+        className="h-full w-full resize-none border-none bg-transparent font-mono text-[14px] text-slate-800 leading-relaxed outline-none dark:text-slate-300"
+        spellCheck={false}
+      />
+    </div>
+  );
+};
+
+// --- 多媒体预览 ---
+export const ImagePreview = ({ url }) => (
+  <div className="flex h-full w-full items-center justify-center p-4">
+    <img
+      alt="Preview"
+      className="zoom-in max-h-full max-w-full animate-in object-contain shadow-2xl duration-300"
+      src={url}
+    />
+  </div>
+);
+
+export const VideoPreview = ({ url }) => (
+  <div className="flex h-full w-full items-center justify-center bg-black">
+    <video autoPlay className="max-h-full max-w-full" controls src={url} />
+  </div>
+);
+
+export const AudioPreview = ({ url }) => (
+  <div className="flex h-full w-full flex-col items-center justify-center bg-white dark:bg-black">
+    <div className="mb-8 flex h-48 w-48 items-center justify-center rounded-3xl bg-blue-500 text-white shadow-2xl">
+      <FileIcon fileName="audio.mp3" size={80} />
+    </div>
+    <audio className="w-80" controls src={url} />
+  </div>
+);
+
+// --- 文档预览 (PDF/Office) ---
+export const DocPreview = ({ url, type }) => {
+  const src =
+    type === 'pdf'
+      ? `${url}#toolbar=0`
+      : `https://view.officeapps.live.com/op/view.aspx?src=${encodeURIComponent(url)}`;
+  return (
+    <iframe
+      className="h-full w-full"
+      frameBorder="0"
+      src={src}
+      title="Document Preview"
+    />
+  );
+};
+
+// --- 兜底下载 ---
+export const FallbackPreview = ({ file }) => (
+  <div className="flex h-full w-full flex-col items-center justify-center gap-6">
+    <FileIcon fileName={file.Key} size={100} />
+    <div className="text-center">
+      <h3 className="font-bold text-xl dark:text-white">{file.Key}</h3>
+      <p className="text-slate-500 uppercase">{file.size} · 不支持预览</p>
+    </div>
+    <button
+      className="flex items-center gap-2 rounded-full bg-blue-500 px-8 py-3 font-bold text-white shadow-lg transition-transform hover:scale-105 active:scale-95"
+      onClick={() => window.open(file.url)}
+    >
+      <Download size={20} /> 下载文件
+    </button>
+  </div>
+);
