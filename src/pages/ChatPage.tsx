@@ -1,13 +1,13 @@
-import { Download, Plus, Send } from 'lucide-react';
+import { Plus, Send } from 'lucide-react';
 import { type ClipboardEventHandler, useMemo, useRef, useState } from 'react';
 
-import { FileIcon } from '@/components/FileIcon';
-import { ChatActionMenu, handleFileAction } from '@/components/FileMenu';
+import { ChatActionMenu } from '@/components/FileMenu';
+import { FileMessage } from '@/components/FileMessage';
 import { FilePicker } from '@/components/FilePicker';
 import { FileStore, useFileStore } from '@/store';
 
 export function ChatPage() {
-  const { files, setPreviewFile, isLoading } = useFileStore();
+  const { files, isLoading } = useFileStore();
   const [inputText, setInputText] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -74,7 +74,7 @@ export function ChatPage() {
               className="group/item fade-in flex flex-col items-start"
               key={file.Key}
             >
-              <div className="mb-2 w-full text-center font-medium text-[11px] text-slate-400/60 uppercase tracking-tighter">
+              <div className="mb-2 w-full text-center font-medium text-[11px] text-slate-400/60 uppercase tracking-tighter md:text-left">
                 {new Date(file.LastModified).toLocaleDateString('zh-CN', {
                   year: 'numeric',
                   month: 'long',
@@ -85,56 +85,13 @@ export function ChatPage() {
               </div>
 
               <div className="group/bubble relative max-w-[88%] md:max-w-[80%]">
-                <div className="absolute -top-9 left-0 z-30 translate-y-1 opacity-0 transition-all duration-200 group-hover/bubble:translate-y-0 group-hover/bubble:opacity-100">
+                <div className="absolute -top-6 right-0 z-30 translate-y-1 opacity-0 transition-all duration-200 group-hover/bubble:translate-y-0 group-hover/bubble:opacity-100">
                   <div className="rounded-full bg-white/90 px-1 shadow-xl ring-1 ring-black/5 backdrop-blur-md dark:bg-slate-800/90">
                     <ChatActionMenu file={file} />
                   </div>
                 </div>
 
-                <div
-                  className={`transition-all duration-300 ${
-                    file.isMsg
-                      ? 'rounded-[22px] rounded-tl-[4px] bg-white px-4 py-2.5 shadow-sm ring-1 ring-black/5 dark:bg-[#1C1C1E] dark:text-white dark:ring-white/10'
-                      : 'rounded-2xl bg-white/40 p-2 shadow-sm ring-1 ring-black/5 backdrop-blur-md dark:bg-white/5'
-                  }`}
-                >
-                  {file.type === 'image' ? (
-                    <div
-                      className="cursor-pointer overflow-hidden rounded-xl"
-                      onClick={() => setPreviewFile(file)}
-                    >
-                      <img
-                        alt=""
-                        className="max-h-72 w-auto object-cover md:max-h-[500px]"
-                        src={file.url}
-                      />
-                    </div>
-                  ) : file.isMsg ? (
-                    <p className="whitespace-pre-wrap text-[15px] text-slate-800 leading-relaxed dark:text-slate-200">
-                      {file.text}
-                    </p>
-                  ) : (
-                    <div className="flex min-w-[220px] items-center gap-3 px-1 py-1">
-                      <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50 text-blue-500 dark:bg-blue-500/10">
-                        <FileIcon fileName={file.Key} size={28} />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="truncate font-semibold text-[14px] text-slate-800 dark:text-slate-100">
-                          {file.Key}
-                        </div>
-                        <div className="font-bold text-[11px] text-slate-400 uppercase tracking-tight">
-                          {file.size}
-                        </div>
-                      </div>
-                      <button
-                        className="flex h-9 w-9 items-center justify-center rounded-full text-blue-500 transition-colors hover:bg-blue-50"
-                        onClick={() => handleFileAction('download', file)}
-                      >
-                        <Download size={18} />
-                      </button>
-                    </div>
-                  )}
-                </div>
+                <FileMessage file={file} />
               </div>
             </div>
           ))

@@ -2,7 +2,6 @@ export type FileType =
   | 'audio'
   | 'video'
   | 'image'
-  | 'vector'
   | 'pdf'
   | 'word'
   | 'excel'
@@ -18,8 +17,7 @@ export type FileType =
 const TYPE_RULES: Record<FileType, RegExp> = {
   audio: /\.(mp3|wav|ogg|flac|m4a|aac|opus)$/i,
   video: /\.(mp4|mov|avi|mkv|webm|flv|wmv)$/i,
-  image: /\.(jpg|jpeg|png|gif|webp|bmp|ico|heic)$/i,
-  vector: /\.(svg|ai|eps)$/i,
+  image: /\.(svg|jpg|jpeg|png|gif|webp|bmp|ico|heic)$/i,
   pdf: /\.pdf$/i,
   word: /\.(doc|docx|dot|rtf)$/i,
   excel: /\.(xls|xlsx|csv|ods)$/i,

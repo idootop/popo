@@ -18,16 +18,7 @@ const kFileActions = {
     icon: Eye,
     label: '预览',
     action: (file) => {
-      // todo
-      try {
-        const link = document.createElement('a');
-        link.href = COS.instance.getUrl(file.Key);
-        link.target = '_blank';
-        link.click();
-      } catch (err) {
-        console.error(err);
-        toast.error('预览失败');
-      }
+      FileStore.value.setPreviewFile(file);
     },
   },
   download: {
@@ -116,7 +107,7 @@ export const ChatActionMenu = ({ file }) => {
         .map(([key, action]) => (
           <div className="group/tooltip relative" key={key}>
             <button
-              className={`rounded p-2 transition-colors hover:bg-slate-100 ${action.color || 'text-slate-600'}`}
+              className={`cursor-pointer rounded p-2 transition-colors hover:bg-slate-100 ${action.color || 'text-slate-600'}`}
               onClick={(e) => {
                 e.stopPropagation();
                 handleFileAction(key as any, file);

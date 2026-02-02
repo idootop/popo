@@ -2,6 +2,7 @@ import { Cloud, FileText, MessageCircle, Plus } from 'lucide-react';
 import { useEffect } from 'react';
 import { useStore } from 'zenbox';
 
+import { FileDrop } from './components/FileDrop';
 import { FilePicker } from './components/FilePicker';
 import { FilePreview } from './components/FilePreview';
 import { ChatPage } from './pages/ChatPage';
@@ -34,7 +35,7 @@ export default function App() {
             { id: 'files', icon: FileText, label: '文件' },
           ].map((tab) => (
             <button
-              className={`relative flex items-center gap-2 rounded-md px-4 py-1.5 font-semibold text-[13px] transition-all duration-200 ${
+              className={`relative flex cursor-pointer items-center gap-2 rounded-md px-4 py-1.5 font-semibold text-[13px] transition-all duration-200 ${
                 mainTab === tab.id
                   ? 'bg-white text-blue-600 shadow-sm dark:bg-white/20 dark:text-white'
                   : 'text-slate-500 hover:text-slate-700'
@@ -65,6 +66,7 @@ export default function App() {
         {mainTab === 'files' && <FilePage />}
       </main>
 
+      <FileDrop />
       <FilePreview />
 
       <style>{`

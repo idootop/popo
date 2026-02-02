@@ -8,7 +8,6 @@ import {
   FileText,
   FileType2,
   Image as ImageIcon,
-  PenTool,
   Presentation,
   ShieldCheck,
   Type,
@@ -21,7 +20,6 @@ const ICON_CONFIG: Record<FileType, { icon: any; color: string }> = {
   audio: { icon: AudioLines, color: 'text-pink-500' },
   video: { icon: Video, color: 'text-purple-500' },
   image: { icon: ImageIcon, color: 'text-blue-500' },
-  vector: { icon: PenTool, color: 'text-orange-600' }, // 矢量绘图
   pdf: { icon: FileType2, color: 'text-red-500' },
   word: { icon: FileText, color: 'text-blue-600' },
   excel: { icon: FileSpreadsheet, color: 'text-green-600' },
