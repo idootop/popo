@@ -18,12 +18,7 @@ export class COS {
     if (COS._instance) {
       return COS._instance;
     }
-    const config = jsonDecode(localStorage.getItem('config')) ?? {
-      SecretId: import.meta.env.VITE_SecretId,
-      SecretKey: import.meta.env.VITE_SecretKey,
-      Bucket: import.meta.env.VITE_Bucket,
-      Region: import.meta.env.VITE_Region,
-    };
+    const config = jsonDecode(localStorage.getItem('config'));
     COS._instance = new COS(config);
     return COS._instance;
   }
