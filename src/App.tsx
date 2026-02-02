@@ -1,4 +1,4 @@
-import { Cloud, FileText, MessageCircle, Settings } from 'lucide-react';
+import { Cloud, FileText, MessageCircle, Plus } from 'lucide-react';
 import { useEffect } from 'react';
 import { useStore } from 'zenbox';
 
@@ -52,8 +52,8 @@ export default function App() {
             ))}
           </div>
 
-          <button className="rounded-full p-2 text-slate-400 transition-colors hover:bg-slate-50">
-            <Settings size={20} />
+          <button className="flex items-center gap-2 rounded-lg bg-amber-500 px-3 py-1.5 font-bold text-white text-xs shadow-amber-200 shadow-lg transition-all hover:bg-amber-600 active:scale-95 md:rounded-xl md:px-4 md:py-2 md:text-sm">
+            <Plus size={16} /> <span className="hidden sm:block">上传</span>
           </button>
         </header>
 
