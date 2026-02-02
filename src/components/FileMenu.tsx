@@ -110,7 +110,7 @@ export function handleFileAction(
 
 export const ChatActionMenu = ({ file }) => {
   return (
-    <div className="zoom-in-95 flex animate-in items-center rounded-lg border border-slate-200 bg-white p-1 shadow-xl ring-1 ring-black/5 duration-150">
+    <div className="zoom-in-95 flex animate-in items-center p-1 duration-150">
       {Object.entries(kFileActions as Record<string, FileAction>)
         .filter(([_, e]) => !e.active || e.active(file))
         .map(([key, action]) => (

@@ -16,28 +16,17 @@ export interface COSFile {
 }
 
 type TabPage = 'chat' | 'files';
-type ViewMode = 'list' | 'grid';
 
 const store = createStore({
   files: [] as COSFile[],
+
   mainTab: 'chat' as TabPage,
-  viewMode: 'grid' as ViewMode,
-  sortConfig: { key: 'LastModified', order: 'desc' },
-  selectedKey: null,
-  previewFile: null,
-  isLoading: false,
-
-  setViewMode: (viewMode: ViewMode) => store.setState({ viewMode }),
-  toast: (msg: string) => toast(msg),
   setMainTab: (tab) => store.setState({ mainTab: tab }),
-  setPreviewFile: (file) => store.setState({ previewFile: file }),
-  setSortConfig: (config) => {
-    store.setState((state) => {
-      state.sortConfig =
-        typeof config === 'function' ? config(state.sortConfig) : config;
-    });
-  },
 
+  previewFile: null,
+  setPreviewFile: (file) => store.setState({ previewFile: file }),
+
+  isLoading: false,
   refreshFiles: async () => {
     store.setState({ isLoading: true });
     try {
@@ -72,11 +61,11 @@ const store = createStore({
 
   upload: async (files: File[]) => {
     if (!files?.length) return;
-    for (const file of Array.from(files)) {
+    for (const file of files) {
       await toast.promise(COS.instance.upload(file.name, file), {
         loading: `正在上传: ${file.name}`,
-        success: () => {
-          store.value.refreshFiles();
+        success: async () => {
+          await store.value.refreshFiles();
           return `已上传: ${file.name}`;
         },
         error: (err) => `上传失败: ${err.message || '未知错误'}`,
@@ -87,13 +76,14 @@ const store = createStore({
   sendText: async (text: string) => {
     if (!text.trim()) return;
     const key = `msg_${Date.now()}.txt`;
-    try {
-      await COS.instance.upload(key, text);
-      store.value.refreshFiles();
-    } catch (e) {
-      console.error(e);
-      toast('发送失败');
-    }
+    await toast.promise(COS.instance.writeString(key, text), {
+      loading: `正在发送`,
+      success: async () => {
+        await store.value.refreshFiles();
+        return `已发送`;
+      },
+      error: (err) => `发送失败: ${err.message || '未知错误'}`,
+    });
   },
 });
 

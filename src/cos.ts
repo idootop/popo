@@ -37,24 +37,6 @@ export class COS {
     });
   }
 
-  async getSignedUrl(key: string): Promise<string> {
-    return new Promise((resolve, reject) => {
-      this.client.getObjectUrl(
-        {
-          Bucket: this.bucket,
-          Region: this.region,
-          Key: key,
-          Sign: true,
-          Expires: 3600,
-        },
-        (err, data) => {
-          if (err) reject(err);
-          else resolve(data.Url || '');
-        },
-      );
-    });
-  }
-
   getUrl(
     key: string,
     { download = false }: { download?: boolean } = {},
@@ -117,14 +99,22 @@ export class COS {
           Key: key,
         },
         (err) => {
-          if (err) reject(err);
-          else resolve(true);
+          if (err) {
+            reject(err);
+          } else {
+            this.cache.delete(key);
+            resolve(true);
+          }
         },
       );
     });
   }
 
+  private cache = new Map<string, string>();
   async readString(key: string): Promise<string> {
+    if (this.cache.has(key)) {
+      return this.cache.get(key)!;
+    }
     return new Promise((resolve, reject) => {
       this.client.getObject(
         {
@@ -133,10 +123,20 @@ export class COS {
           Key: key,
         },
         (err, data) => {
-          if (err) reject(err);
-          else resolve(data.Body.toString());
+          if (err) {
+            reject(err);
+          } else {
+            const content = data.Body.toString();
+            this.cache.set(key, content);
+            resolve(content);
+          }
         },
       );
     });
+  }
+
+  async writeString(key: string, text: string) {
+    await this.upload(key, text);
+    this.cache.set(key, text);
   }
 }
