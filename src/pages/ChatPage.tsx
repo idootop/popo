@@ -67,7 +67,7 @@ export function ChatPage() {
         {isLoading && !sortedFiles.length ? (
           <div className="flex h-[80vh] flex-col items-center justify-center gap-4">
             <RefreshCw className="animate-spin text-slate-400" size={24} />
-            <p className="text-slate-500 text-sm">加载中...</p>
+            <p className="text-sm text-slate-500">加载中...</p>
           </div>
         ) : (
           sortedFiles.map((file) => (
@@ -75,7 +75,7 @@ export function ChatPage() {
               className="group/item fade-in flex flex-col items-start"
               key={file.Key}
             >
-              <div className="mb-2 w-full text-center font-medium text-[11px] text-slate-400/60 uppercase tracking-tighter md:text-left">
+              <div className="mb-2 w-full text-center text-[11px] font-medium tracking-tighter text-slate-400/60 uppercase md:text-left">
                 {new Date(file.LastModified).toLocaleDateString('zh-CN', {
                   year: 'numeric',
                   month: 'long',
@@ -100,8 +100,8 @@ export function ChatPage() {
       </div>
 
       {/* 输入框区域 */}
-      <div className="fixed right-0 bottom-0 left-0 z-40 bg-gradient-to-t from-[#F5F5F7] via-[#F5F5F7]/95 to-transparent p-4 pb-6 md:p-8 md:pb-10 dark:from-black">
-        <div className="mx-auto flex max-w-3xl items-end gap-2 rounded-[36px] border border-slate-200/50 bg-white/80 p-1.5 shadow-[0_10px_40px_rgba(0,0,0,0.06)] backdrop-blur-2xl transition-all focus-within:ring-1 focus-within:ring-blue-500/20 md:gap-3 md:p-2 dark:border-white/10 dark:bg-[#1C1C1E]/90">
+      <div className="fixed right-0 bottom-0 left-0 z-40 bg-gradient-to-t from-[#F5F5F7] via-[#F5F5F7]/95 to-transparent p-4 pb-6 md:p-8 md:pb-10 dark:from-black dark:via-black/95">
+        <div className="mx-auto flex max-w-3xl items-end gap-2 rounded-[36px] border border-slate-200/50 bg-white/80 p-1.5 shadow-[0_10px_40px_rgba(0,0,0,0.06)] backdrop-blur-2xl transition-all focus-within:ring-1 focus-within:ring-blue-500/20 md:gap-3 md:p-2 dark:border-white/10 dark:bg-[#1C1C1E]/90 dark:shadow-[0_10px_40px_rgba(0,0,0,0.45)]">
           <FilePicker onSelect={FileStore.value.upload}>
             <button className="flex h-10 w-10 flex-shrink-0 cursor-pointer items-center justify-center rounded-full text-blue-500 transition-colors hover:bg-blue-50 active:scale-90 md:h-12 md:w-12">
               <Plus size={26} strokeWidth={2.5} />
@@ -109,7 +109,7 @@ export function ChatPage() {
           </FilePicker>
 
           <textarea
-            className="max-h-32 flex-1 resize-none border-none bg-transparent py-2.5 text-[16px] text-slate-800 leading-[1.4] placeholder:text-slate-400 focus:outline-none focus:ring-0 md:py-3.5 md:text-[17px]"
+            className="max-h-32 flex-1 resize-none border-none bg-transparent py-2.5 text-[16px] leading-[1.4] text-slate-800 placeholder:text-slate-400 focus:ring-0 focus:outline-none md:py-3.5 md:text-[17px] dark:text-slate-100 dark:placeholder:text-slate-500"
             onChange={handleInput}
             onKeyDown={handleKeyDown}
             onPaste={onPaste}
@@ -122,7 +122,7 @@ export function ChatPage() {
           <button
             className={`flex h-10 w-10 flex-shrink-0 cursor-pointer items-center justify-center rounded-full transition-all active:scale-95 md:h-12 md:w-12 ${
               inputText.trim()
-                ? 'bg-blue-500 text-white shadow-blue-500/20 shadow-md'
+                ? 'bg-blue-500 text-white shadow-md shadow-blue-500/20'
                 : 'bg-slate-100 text-slate-300 dark:bg-white/5'
             }`}
             disabled={!inputText.trim()}

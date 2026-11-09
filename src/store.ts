@@ -17,6 +17,11 @@ export interface COSFile {
 
 type TabPage = 'chat' | 'files';
 
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+/** 每次刷新自增，只有最新一次请求的结果会写入 store，避免旧响应覆盖新数据 */
+let refreshSeq = 0;
+
 const store = createStore({
   files: [] as COSFile[],
 
@@ -27,10 +32,24 @@ const store = createStore({
   setPreviewFile: (file) => store.setState({ previewFile: file }),
 
   isLoading: false,
-  refreshFiles: async () => {
+  refreshFiles: async ({ ensureKey }: { ensureKey?: string } = {}) => {
+    const seq = ++refreshSeq;
     store.setState({ isLoading: true });
     try {
-      const rawFiles = await COS.instance.list();
+      let rawFiles = await COS.instance.list();
+
+      // 上传后对象可能还没出现在 ListObjects 结果里，短暂重试几次
+      if (ensureKey) {
+        for (
+          let i = 0;
+          i < 3 && !rawFiles.some((f) => f.Key === ensureKey);
+          i++
+        ) {
+          await sleep(400);
+          rawFiles = await COS.instance.list();
+        }
+      }
+
       const processed = await Promise.all(
         rawFiles.map(async (f) => {
           const type = getFileType(f.Key);
@@ -51,9 +70,11 @@ const store = createStore({
           };
         }),
       );
+      if (seq !== refreshSeq) return;
       store.setState({ files: processed, isLoading: false });
     } catch (e) {
       console.error(e);
+      if (seq !== refreshSeq) return;
       store.setState({ isLoading: false });
       toast.error('刷新失败');
     }
@@ -62,14 +83,18 @@ const store = createStore({
   upload: async (files: File[]) => {
     if (!files?.length) return;
     for (const file of files) {
-      await toast.promise(COS.instance.upload(file.name, file), {
+      const task = COS.instance.upload(file.name, file);
+      toast.promise(task, {
         loading: `正在上传: ${file.name}`,
-        success: async () => {
-          await store.value.refreshFiles();
-          return `已上传: ${file.name}`;
-        },
+        success: `已上传: ${file.name}`,
         error: (err) => `上传失败: ${err.message || '未知错误'}`,
       });
+      try {
+        await task;
+      } catch {
+        continue;
+      }
+      await store.value.refreshFiles({ ensureKey: file.name });
     }
   },
 

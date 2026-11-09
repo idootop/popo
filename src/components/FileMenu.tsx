@@ -111,7 +111,7 @@ export const FileActionPopover = ({
 
   return (
     <div
-      className="fade-in zoom-in-95 fixed z-[9999] w-44 animate-in overflow-hidden rounded-xl border border-slate-200 bg-white/95 py-1 shadow-xl ring-1 ring-black/5 backdrop-blur-md duration-100 dark:border-white/10 dark:bg-[#1C1C1E]/95"
+      className="fade-in zoom-in-95 animate-in fixed z-[9999] w-44 overflow-hidden rounded-xl border border-slate-200 bg-white/95 py-1 shadow-xl ring-1 ring-black/5 backdrop-blur-md duration-100 dark:border-white/10 dark:bg-[#1C1C1E]/95"
       onMouseDown={(e) => e.stopPropagation()}
       style={{
         top: `${position.top}px`,
@@ -227,13 +227,13 @@ export function useFileActionPopover({
 
 export const ChatActionMenu = ({ file }) => {
   return (
-    <div className="zoom-in-95 flex animate-in items-center p-1 duration-150">
+    <div className="zoom-in-95 animate-in flex items-center p-1 duration-150">
       {Object.entries(kFileActions as Record<string, FileAction>)
         .filter(([_, e]) => !e.active || e.active(file))
         .map(([key, action]) => (
           <div className="group/tooltip relative" key={key}>
             <button
-              className={`cursor-pointer rounded p-2 transition-colors hover:bg-slate-100 ${action.color || 'text-slate-600'}`}
+              className={`cursor-pointer rounded p-2 transition-colors hover:bg-slate-100 dark:hover:bg-white/10 ${action.color || 'text-slate-600 dark:text-slate-300'}`}
               onClick={(e) => {
                 e.stopPropagation();
                 handleFileAction(key as any, file);
@@ -241,7 +241,7 @@ export const ChatActionMenu = ({ file }) => {
             >
               <action.icon size={14} />
             </button>
-            <span className="pointer-events-none absolute -top-9 left-1/2 z-50 -translate-x-1/2 whitespace-nowrap rounded bg-slate-800 px-2 py-1 text-[10px] text-white opacity-0 transition-opacity group-hover/tooltip:opacity-100">
+            <span className="pointer-events-none absolute -top-9 left-1/2 z-50 -translate-x-1/2 rounded bg-slate-800 px-2 py-1 text-[10px] whitespace-nowrap text-white opacity-0 transition-opacity group-hover/tooltip:opacity-100">
               {action.label}
             </span>
           </div>
