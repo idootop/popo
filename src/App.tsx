@@ -1,12 +1,5 @@
 import { jsonDecode, jsonEncode } from '@del-wang/utils';
-import {
-  Cloud,
-  FileText,
-  Lock,
-  MessageCircle,
-  Plus,
-  RefreshCw,
-} from 'lucide-react';
+import { Cloud, FileText, MessageCircle, Plus, RefreshCw } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { useStore } from 'zenbox';
@@ -16,6 +9,7 @@ import { FilePicker } from './components/FilePicker';
 import { FilePreview } from './components/FilePreview';
 import { ChatPage } from './pages/ChatPage';
 import { FilePage } from './pages/FilePage';
+import { LoginPage } from './pages/LoginPage';
 import { FileStore } from './store';
 
 export default function App() {
@@ -25,9 +19,8 @@ export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(
     !!jsonDecode(localStorage.getItem('config'))?.SecretKey,
   );
-  const [password, setPassword] = useState('');
 
-  const handleLogin = async () => {
+  const handleLogin = async (password: string) => {
     try {
       const res = await fetch(
         `${import.meta.env.VITE_PREFIX}/${password}.json`,
@@ -37,8 +30,10 @@ export default function App() {
       localStorage.setItem('config', jsonEncode(data));
       setIsAuthenticated(true);
       toast.success('验证成功');
+      return true;
     } catch {
       toast.error('验证失败');
+      return false;
     }
   };
 
@@ -68,39 +63,7 @@ export default function App() {
 
   // 如果未登录，渲染登录界面
   if (!isAuthenticated) {
-    return (
-      <div className="flex h-screen w-full items-center justify-center bg-[#F5F5F7] p-4 dark:bg-black">
-        <div className="fade-in w-full max-w-sm rounded-3xl bg-white p-8 shadow-2xl dark:bg-[#1C1C1E]">
-          <div className="flex flex-col items-center">
-            <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-500 text-white shadow-lg">
-              <Lock size={32} />
-            </div>
-            <h2 className="text-2xl font-bold dark:text-white">内容受限</h2>
-          </div>
-
-          <input
-            className="my-4 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 transition-all outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-white/10 dark:bg-white/5 dark:text-white"
-            onChange={(e) => setPassword(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                handleLogin();
-              }
-            }}
-            onSubmit={handleLogin}
-            placeholder="请输入密码..."
-            type="text"
-            value={password}
-          />
-
-          <button
-            className="w-full cursor-pointer rounded-xl bg-blue-500 py-3 font-bold text-white transition-all hover:bg-blue-600 active:scale-[0.98]"
-            onClick={handleLogin}
-          >
-            进入 Popo
-          </button>
-        </div>
-      </div>
-    );
+    return <LoginPage onLogin={handleLogin} />;
   }
 
   // --- 原有的 App 主体逻辑 ---
