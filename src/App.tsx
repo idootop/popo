@@ -1,5 +1,5 @@
 import { jsonDecode, jsonEncode } from '@del-wang/utils';
-import { Cloud, FileText, MessageCircle, Plus, RefreshCw } from 'lucide-react';
+import { FileText, MessageCircle, Plus, RefreshCw } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { useStore } from 'zenbox';
@@ -71,9 +71,12 @@ export default function App() {
     <div className="flex h-screen w-full flex-1 flex-col overflow-hidden bg-[#F5F5F7] font-sans text-slate-900 antialiased select-none dark:bg-black">
       <header className="sticky top-0 z-[60] flex h-14 items-center justify-between border-b border-slate-200/60 bg-white/80 px-4 backdrop-blur-xl md:h-16 md:px-8 dark:border-white/10 dark:bg-[#1C1C1E]/80">
         <div className="flex items-center gap-3">
-          <div className="flex items-center justify-center rounded-xl bg-blue-500 p-1.5 text-white shadow-md md:p-2">
-            <Cloud size={18} strokeWidth={2.5} />
-          </div>
+          <img
+            alt="Popo"
+            className="h-9 w-9 object-contain md:h-10 md:w-10"
+            draggable={false}
+            src="/icon-192.png"
+          />
           <h1 className="hidden text-[19px] font-bold tracking-tight sm:block">
             Popo
           </h1>
